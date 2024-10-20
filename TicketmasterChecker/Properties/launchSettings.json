@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "TicketmasterChecker": {
+      "commandName": "Project",
+      "commandLineArgs": "\"https://www.ticketmaster.com.br/event/venda-geral-linkin-park\" \"Linkin Park - 15/11\"",
+      "remoteDebugEnabled": false
+    }
+  }
+}

@@ -1,5 +1,4 @@
 ﻿using OpenQA.Selenium;
-using OpenQA.Selenium.Chrome;
 
 namespace TicketmasterChecker;
 
@@ -14,18 +13,18 @@ internal sealed class TicketmasterCore
     private const int BEEP_DURATION = 5_000;
 
     private const string AVAILABILITY_KEYWORD_REFERENCE = "Esgotado";
-    private const string AVAILABILITY_OPTIONS_ELEMENT_ID = "show-button";
-    private const string AVAILABILITY_VALUES_ELEMENT_ID = "66923";
+    private const string AVAILABILITY_BUTTON_ELEMENT_ID = "show-button";
+    private const string AVAILABILITY_DROPDOWN_ELEMENT_ID = "show-dropdown";
 
-    public TicketmasterCore(string url, string urlDescription)
+    public TicketmasterCore(IWebDriver webDriver, string url, string urlDescription)
     {
+        ArgumentNullException.ThrowIfNull(webDriver, nameof(webDriver));
+        ArgumentNullException.ThrowIfNull(url, nameof(url));
+        ArgumentNullException.ThrowIfNull(urlDescription, nameof(urlDescription));
+
+        _webDriver = webDriver;
         _url = url;
         _urlDescription = urlDescription;
-
-        var options = new ChromeOptions();
-        options.AddArgument("headless");
-
-        _webDriver = new ChromeDriver(options);
     }
 
     public async Task DoWork()
@@ -38,9 +37,9 @@ internal sealed class TicketmasterCore
             {
                 await _webDriver.Navigate().GoToUrlAsync(_url);
 
-                _webDriver.FindElement(By.Id(AVAILABILITY_OPTIONS_ELEMENT_ID))?.Click();
+                _webDriver.FindElement(By.Id(AVAILABILITY_BUTTON_ELEMENT_ID))?.Click();
 
-                var elementValue = _webDriver.FindElement(By.Id(AVAILABILITY_VALUES_ELEMENT_ID))?.Text;
+                var elementValue = _webDriver.FindElement(By.XPath($"//ul[@id='{AVAILABILITY_DROPDOWN_ELEMENT_ID}']/li/a"))?.Text;
 
                 if (IsThereAnyTicketAvailable(elementValue))
                 {

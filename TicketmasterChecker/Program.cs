@@ -1,4 +1,10 @@
-﻿using TicketmasterChecker;
+﻿using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
+using TicketmasterChecker;
+
+(string url, string urlDescription) = CheckArguments(args);
+
+IWebDriver webDriver = CreateWebDriver();
 
 Console.WriteLine($"""
             ========================================================
@@ -7,13 +13,9 @@ Console.WriteLine($"""
             """
 );
 
-new TicketmasterCore("https://www.ticketmaster.com.br/event/venda-geral-linkin-park", "Linkin Park - 15/11")
+new TicketmasterCore(webDriver, url, urlDescription)
     .DoWork()
     .Wait();
-
-//new TicketmasterCore("https://www.ticketmaster.com.br/event/venda-geral-linkin-park-extra", "Linkin Park - 16/11")
-//    .DoWork()
-//    .Wait();
 
 Console.WriteLine($"""
             ========================================================
@@ -21,3 +23,24 @@ Console.WriteLine($"""
             ========================================================
             """
 );
+
+static (string url, string urlDescription) CheckArguments(string[] args)
+{
+    if (args.Length != 2)
+    {
+        throw new ArgumentException("You must provide the URL and the URL description as arguments");
+    }
+
+    string url = args[0];
+    string urlDescription = args[1];
+
+    return (url, urlDescription);
+}
+
+static IWebDriver CreateWebDriver()
+{
+    var options = new ChromeOptions();
+    options.AddArgument("headless");
+
+    return new ChromeDriver(options);
+}
