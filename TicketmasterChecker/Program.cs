@@ -6,22 +6,29 @@ using TicketmasterChecker;
 
 IWebDriver webDriver = CreateWebDriver();
 
-Console.WriteLine($"""
-            ========================================================
-            Starting the Ticketmaster Checker at {DateTime.Now}
-            ========================================================
-            """
+IUserNotification userNotification = new UserNotificationBeep(
+    beepFrequencyInMilliseconds: 1_000, 
+    beepDurationInMilliseconds: 5_000
 );
 
-new TicketmasterCore(webDriver, url, urlDescription)
-    .DoWork()
+CancellationTokenSource cancellationTokenSource = new();
+
+Console.WriteLine($"""
+    ========================================================
+    Starting the Ticketmaster Checker at {DateTime.Now}
+    ========================================================
+    """
+);
+
+new TicketmasterCore(userNotification, webDriver, url, urlDescription)
+    .DoWork(cancellationTokenSource.Token)
     .Wait();
 
 Console.WriteLine($"""
-            ========================================================
-            Ending the Ticketmaster Checker at {DateTime.Now}
-            ========================================================
-            """
+    ========================================================
+    Ending the Ticketmaster Checker at {DateTime.Now}
+    ========================================================
+    """
 );
 
 static (string url, string urlDescription) CheckArguments(string[] args)

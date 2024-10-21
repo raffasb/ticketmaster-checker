@@ -4,32 +4,32 @@ namespace TicketmasterChecker;
 
 internal sealed class TicketmasterCore
 {
+    private readonly IUserNotification _userNotification;
+    private readonly IWebDriver _webDriver;
     private readonly string _url;
     private readonly string _urlDescription;
-    private readonly IWebDriver _webDriver;
 
-    private const int INTERATION_INTERVAL = 10_000;
-    private const int BEEP_FREQUENCY = 1_000;
-    private const int BEEP_DURATION = 5_000;
-
+    private const int INTERATION_CHECK_INTERVAL_IN_MILLISECONDS = 10_000;
     private const string AVAILABILITY_KEYWORD_REFERENCE = "Esgotado";
     private const string AVAILABILITY_BUTTON_ELEMENT_ID = "show-button";
     private const string AVAILABILITY_DROPDOWN_ELEMENT_ID = "show-dropdown";
 
-    public TicketmasterCore(IWebDriver webDriver, string url, string urlDescription)
+    public TicketmasterCore(IUserNotification userNotification, IWebDriver webDriver, string url, string urlDescription)
     {
+        ArgumentNullException.ThrowIfNull(userNotification, nameof(userNotification));
         ArgumentNullException.ThrowIfNull(webDriver, nameof(webDriver));
         ArgumentNullException.ThrowIfNull(url, nameof(url));
         ArgumentNullException.ThrowIfNull(urlDescription, nameof(urlDescription));
 
+        _userNotification = userNotification;
         _webDriver = webDriver;
         _url = url;
         _urlDescription = urlDescription;
     }
 
-    public async Task DoWork()
+    public async Task DoWork(CancellationToken cancellationToken)
     {
-        while (true)
+        while (!cancellationToken.IsCancellationRequested)
         {
             Console.WriteLine($"Checking tickets... {DateTime.Now} ({_urlDescription})");
 
@@ -43,7 +43,9 @@ internal sealed class TicketmasterCore
 
                 if (IsThereAnyTicketAvailable(elementValue))
                 {
-                    NotifyUser();
+                    Console.WriteLine($"Tickets available at {DateTime.Now} ({_urlDescription})");
+
+                    _userNotification.Notify();
                 }
             }
             catch (Exception ex)
@@ -51,19 +53,12 @@ internal sealed class TicketmasterCore
                 Console.WriteLine($"An error occurred ({_urlDescription}): {ex.Message}");
             }
 
-            await Task.Delay(INTERATION_INTERVAL);
+            await Task.Delay(INTERATION_CHECK_INTERVAL_IN_MILLISECONDS, cancellationToken);
         }
     }
 
     private bool IsThereAnyTicketAvailable(string? elementValue)
     {
         return !string.IsNullOrEmpty(elementValue) && !elementValue.Contains(AVAILABILITY_KEYWORD_REFERENCE, StringComparison.InvariantCultureIgnoreCase);
-    }
-
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Known that is only a Windows capability")]
-    private void NotifyUser()
-    {
-        Console.WriteLine($"Tickets available at {DateTime.Now} ({_urlDescription})");
-        Console.Beep(BEEP_FREQUENCY, BEEP_DURATION);
     }
 }
